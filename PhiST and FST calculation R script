@@ -1,0 +1,150 @@
+#R script for generating pairwise sample FSTs and PhiSTs for DNA sequence loci (150 RAD loci plus mtCOI)
+#First calculation is locus-by-locus PhiSTs, followed by PhiSTs and FSTs for all loci together
+# Load Libraries
+library("adegenet")
+library("haplotypes")
+library("ape")
+library("stringr")
+library("graph4lg")
+
+#set working directory
+setwd("~/Library/CloudStorage/GoogleDrive-pmarko@hawaii.edu/My Drive/E. mathaei DNA sequences/Manuscript/sequence_data_analysis/seq_data_analysis")
+
+####### Loop for Pairwise PhiST per locus ########
+#get all the names of the files
+files<-list.files("data/merged_151/")
+#create folders where results will be saved
+dir.create("individual_loci_output")
+
+#this is the loop that processes all the files so you don't have to repeat the code for each one
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  loci<-read.dna(file= paste0("data/merged_151/",files[i]), format = "fasta", as.character = T)
+  #get population info from the name of sequence (pop_samplename_loci)
+  populations<- sub("\\_.*", "", rownames(loci))
+  #this just gets rid of the .fasta part of each name so it is cleaner looking
+  lociname <- gsub(".fasta", "", files[i])
+  #convert to correct format
+  loci<-as.dna(loci)
+  #phist code
+  pst<-pairPhiST(loci, populations, nperm=999, negatives=TRUE, showprogbar=FALSE) #calculates distance in code
+  
+  #How to create a prettier table
+  #first start with reordering phist
+  pst_test<-as.matrix(pst$PhiST) #convert to matrix
+  pst_test[upper.tri(pst_test)] <- t(pst_test)[upper.tri(pst_test)] #copy so symmetrical 
+  p_order<-c("MAK", "MI", "KMC", "NWHI", "KIR", "RMI", "GM", "JPN") #chose new order
+  phist_reordered <- reorder_mat(mat = pst_test, order = p_order) #reorder
+  #second reorder p-value
+  pst_test2<-as.matrix(pst$p) #convert to matrix
+  pst_test2[upper.tri(pst_test2)] <- t(pst_test2)[upper.tri(pst_test2)] #copy so symettrical 
+  pvalue_reordered <- reorder_mat(mat = pst_test2, order = p_order) #reorder
+  #now merge the two halves together
+  phist_reordered[upper.tri(phist_reordered)] <- pvalue_reordered[upper.tri(pvalue_reordered)]
+  
+  #save table that has upper half p-value and lower half phist values
+  write.csv(phist_reordered,file = paste0("individual_loci_output/",lociname,"_phistats_pvalues.csv"))
+}
+
+######################  PairwisePhiST for all Loci Together ########################## 
+#load all fasta files into a list
+setwd("~/Library/CloudStorage/GoogleDrive-pmarko@hawaii.edu/My Drive/E. mathaei DNA sequences/Manuscript/sequence_data_analysis/seq_data_analysis/data/merged_151/")
+allloci<-lapply(files, function(i){read.dna(i,format = "fasta", as.character = T)}) # this loads all teh files in the folder using the function read.dna 
+
+#convert to dataframe
+#first make a dataframe with names of samples
+names<-rownames(allloci[[1]]) #calls rownames since it is not a separate column
+names2 <- as.data.frame(str_split_fixed(names, '_', 3)) #separates out the name based on the _ character. This is because each name is for a unique loci and you need a sample name that remains the same across each loci to then merge the dataframes by
+names2$alternate<-rep(c("a","b")) #if you don't add this you have repeat of the same name which does not work for merging so this creates each row as a unique name
+finalnames<-paste(names2$V1, names2$V2,names2$alternate, sep="_") #merges back together without the loci number so this is essentially the sample name with an "a" or "b" since it is phased
+allloci2<-data.frame(sample=finalnames) #creates a dataframe where data will be stored 
+
+#now fill the dataframe with each additional loci
+for(i in 1:length(allloci)) {
+  allloci3<-as.data.frame(allloci[[i]]) #change to dataframe
+  names<-rownames(allloci3) # the next few lines are the same as above to get the sample names 
+  names2 <- as.data.frame(str_split_fixed(names, '_', 3))
+  names2$alternate<-rep(c("a","b"))
+  names2$sample<-paste(names2$V1, names2$V2,names2$alternate, sep="_")
+  allloci3$sample<-names2$sample
+  allloci2<<-merge(allloci2,allloci3,by="sample", all = TRUE, ) # adds the data to the larger dataframe the additional < in <<- makes sure that the data is saved outside the loop otherwise once the loop closes you won't find the dataframe
+}
+
+#set populations
+populations<- sub("\\_.*", "", allloci2$sample) #all the sample names start with the population they are from so this just pulls that info from each sample name
+#convert to dna format 
+allloci2<-as.dna(allloci2)
+#run phist
+pst_allloci<-pairPhiST(allloci2, populations, nperm=999, negatives=FALSE, showprogbar=FALSE) #calculates distances in code
+
+#How to create a prettier table
+#first start with reordering phist
+pst_test<-as.matrix(pst_allloci$PhiST) #convert to matrix
+pst_test[upper.tri(pst_test)] <- t(pst_test)[upper.tri(pst_test)] #copy so symmetrical 
+p_order<-c("MAK", "MI", "KMC", "NWHI", "KIR", "RMI", "GM", "JPN") #chose new order
+phist_reordered <- reorder_mat(mat = pst_test, order = p_order) #reorder
+#second reorder p-value
+pst_test2<-as.matrix(pst_allloci$p) #convert to matrix
+pst_test2[upper.tri(pst_test2)] <- t(pst_test2)[upper.tri(pst_test2)] #copy so symettrical 
+pvalue_reordered <- reorder_mat(mat = pst_test2, order = p_order) #reorder
+#now merge the two halves together
+phist_reordered[upper.tri(phist_reordered)] <- pvalue_reordered[upper.tri(pvalue_reordered)]
+
+#set where you want the overall files to be saved
+setwd("~/Library/CloudStorage/GoogleDrive-pmarko@hawaii.edu/My Drive/E. mathaei DNA sequences/Manuscript/sequence_data_analysis/seq_data_analysis")
+dir.create("all_loci_output")
+#save phist as a csv file
+write.csv(phist_reordered,file = "all_loci_output/allloci_phistats_pvalues.csv")
+
+
+############################################################################
+######################  Fst for all Loci Together ########################## 
+############################################################################
+library("ape")
+######### load all fasta files into a list ###########
+setwd("~/Library/CloudStorage/GoogleDrive-pmarko@hawaii.edu/My Drive/E. mathaei DNA sequences/Manuscript/sequence_data_analysis/seq_data_analysis")
+#get all the names of the files
+files<-list.files("data/merged_151/")
+setwd("~/Library/CloudStorage/GoogleDrive-pmarko@hawaii.edu/My Drive/E. mathaei DNA sequences/Manuscript/sequence_data_analysis/seq_data_analysis/data/merged_151")
+allloci<-lapply(files, function(i){read.dna(i,format = "fasta", as.character = T)}) # this loads all the files in the folder using the function read.dna 
+
+#for hierfstat you need a data frame containing population of origin as the first column and multi-locus genotypes in following columns
+######### convert to dataframe then to genind then to hierfstat dataframe because my dataframe did not work :( #########
+library("hierfstat")
+library("adegenet")
+
+names<-rownames(allloci[[1]]) #calls rownames since it is not a separate column
+names2 <- as.data.frame(str_split_fixed(names, '_', 3)) #separates out the name based on the _ character. This is because each name is for a unique loci and you need a sample name that remains the same across each loci to then merge the dataframes by
+names2$alternate<-rep(c("a","b")) #if you don't add this you have repeat of the same name which does not work for merging so this creates each row as a unique name
+finalnames<-paste(names2$V1, names2$V2,names2$alternate, sep="_") #merges back together without the loci number so this is essentially the sample name with an "a" or "b" since it is phased
+allloci2<-data.frame(sample=finalnames) #creates a dataframe where data will be stored 
+#now fill the dataframe with each additional loci
+for(i in 1:length(allloci)) {
+  allloci3<-as.data.frame(allloci[[i]]) #change to dataframe
+  names<-rownames(allloci3) # the next few lines are the same as above to get the sample names 
+  names2 <- as.data.frame(str_split_fixed(names, '_', 3))
+  names2$alternate<-rep(c("a","b"))
+  names2$sample<-paste(names2$V1, names2$V2,names2$alternate, sep="_")
+  allloci3$sample<-names2$sample
+  rownames(allloci3)<-allloci3$sample
+  allloci2<<-merge(allloci2,allloci3,by="sample", all = TRUE ) # adds the data to the larger dataframe the additional < in <<- makes sure that the data is saved outside the loop otherwise once the loop closes you won't find the dataframe
+}
+#get populations
+populations<- sub("\\_.*", "", allloci2$sample) #all the sample names start with the population they are from so this just pulls that info from each sample name
+#get sample names
+sampnames<-allloci2$sample
+#rename columns
+colnames(allloci2)<-gsub("\\.","",colnames(allloci2))
+#convert to genind
+geninddata<-df2genind(allloci2[-1], ind.names = sampnames,pop = populations,sep = NULL,ncode = 1)
+#convert to heirfstat
+hdata<-genind2hierfstat(geninddata,pop=NULL)
+# run heirfstat
+resultsWC84<-genet.dist(hdata,diploid=TRUE,method="WC84")
+#save in general folder
+setwd("~/Library/CloudStorage/GoogleDrive-pmarko@hawaii.edu/My Drive/E. mathaei DNA sequences/Manuscript/sequence_data_analysis/seq_data_analysis")
+write.csv(resultsWC84,file = "allloci_fst_nopvalues_wc84.csv")
+
+
+

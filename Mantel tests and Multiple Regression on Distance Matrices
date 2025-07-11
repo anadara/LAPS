@@ -1,0 +1,133 @@
+### Correlation analyses: example Mantel script and Multiple Regression on Distance Matrices
+
+### Example: Mantel test on phist for seqs versus euclidean (geographic) distances
+library(ade4)
+setwd("~/Library/CloudStorage/GoogleDrive-pmarko@hawaii.edu/My Drive/E. mathaei DNA sequences/Manuscript/snp_data_analysis/")
+fst <- read.table("allloci_phistats_final_sym.txt", header=TRUE)
+fst_distances <- as.dist(fst)
+euclid <- read.table("euclidian_distances.txt", header=TRUE)
+euclidian_distances <- as.dist(euclid)
+ade4::mantel.rtest(fst_distances, euclidian_distances, nrepet = 9999)
+
+### Example: Mantel test on phist for seqs versus FST for snps 
+library(ade4)
+setwd("~/Library/CloudStorage/GoogleDrive-pmarko@hawaii.edu/My Drive/E. mathaei DNA sequences/Manuscript/snp_data_analysis/")
+fst <- read.table("allloci_phistats_final_sym.txt", header=TRUE)
+fst_distances <- as.dist(fst)
+euclid <- read.table("allloci_fstsnps_final_sym.txt", header=TRUE)
+euclidian_distances <- as.dist(euclid)
+ade4::mantel.rtest(fst_distances, euclidian_distances, nrepet = 9999)
+
+
+###Multiple Regression on Distance Matrices (MRM) regression test using FST from SNPs
+
+# Load required package
+library(ecodist)
+
+# Set working directory (modify this if needed)
+setwd("~/Library/CloudStorage/GoogleDrive-pmarko@hawaii.edu/My Drive/E. mathaei DNA sequences/Manuscript/snp_data_analysis/")
+
+# Load distance matrices
+fst_matrix <- as.dist(read.table("fstsnps_final_sym.txt", header=TRUE, row.names=1))
+divt_matrix <- as.dist(read.table("divt_snps_sym.txt", header=TRUE, row.names=1))
+ne_matrix <- as.dist(read.table("ne_snps_sym.txt", header=TRUE, row.names=1))
+nanc_matrix <- as.dist(read.table("nanc_snps_sym.txt", header=TRUE, row.names=1))
+nm_comb_matrix <- as.dist(read.table("nm_comb_snps_sym.txt", header=TRUE, row.names=1))
+nm_matrix <- as.dist(read.table("nm_snps_sym.txt", header=TRUE, row.names=1))
+nmdur_matrix <- as.dist(read.table("nm_duration_snps_sym.txt", header=TRUE, row.names=1))
+bottleneck_matrix <- as.dist(read.table("bottleneck_snps_sym.txt", header=TRUE, row.names=1))
+
+
+# Perform MRM (Multiple Regression on Distance Matrices)
+mrm_result <- MRM(fst_matrix ~ divt_matrix + ne_matrix + nanc_matrix + nm_comb_matrix + nm_matrix + nmdur_matrix + bottleneck_matrix, nperm = 9999)
+mrm_result <- MRM(fst_matrix ~ divt_matrix + ne_matrix + nanc_matrix + nm_comb_matrix + bottleneck_matrix, nperm = 9999)
+mrm_result <- MRM(fst_matrix ~ divt_matrix + ne_matrix + nanc_matrix + nm_matrix + bottleneck_matrix, nperm = 9999)
+mrm_result <- MRM(fst_matrix ~ divt_matrix + ne_matrix + nanc_matrix + nm_comb_matrix + bottleneck_matrix, nperm = 9999)
+
+print(mrm_result)
+
+#test each varaible separately for a separate R2
+mrm_divt <- MRM(fst_matrix ~ divt_matrix, nperm = 9999)
+print(mrm_divt)
+
+mrm_ne <- MRM(fst_matrix ~ ne_matrix, nperm = 9999)
+print(mrm_ne)
+
+mrm_nanc <- MRM(fst_matrix ~ nanc_matrix, nperm = 9999)
+print(mrm_nanc)
+
+mrm_nm_comb <- MRM(fst_matrix ~ nm_comb_matrix, nperm = 9999)
+print(mrm_nm_comb)
+
+mrm_nm <- MRM(fst_matrix ~ nm_matrix, nperm = 9999)
+print(mrm_nm)
+
+# check for colinearity
+vif(lm(fst_matrix ~ divt_matrix + ne_matrix + nanc_matrix + nm_comb_matrix + bottleneck3_matrix))
+vif(lm(fst_matrix ~ divt_matrix + ne_matrix + nanc_matrix + nm_comb_matrix + bottleneck3_matrix))
+
+# Run the model with and without each variable, one at a time
+# Fit the full model
+mrm_full <- MRM(fst_matrix ~ divt_matrix + ne_matrix + nanc_matrix + nm_comb_matrix + bottleneck_matrix, nperm = 9999)
+
+# Compute AIC for the full model
+AIC_full <- AIC(lm(fst_matrix ~ divt_matrix + ne_matrix + nanc_matrix + nm_comb_matrix + bottleneck_matrix))
+
+print(AIC_full)
+
+# Models with one variable removed
+mrm_no_divt <- MRM(fst_matrix ~ ne_matrix + nanc_matrix + nm_comb_matrix + bottleneck3_matrix, nperm = 9999)
+mrm_no_ne   <- MRM(fst_matrix ~ divt_matrix + nanc_matrix + nm_comb_matrix + bottleneck_matrix, nperm = 9999)
+mrm_no_nanc <- MRM(fst_matrix ~ divt_matrix + ne_matrix + nm_comb_matrix + bottleneck_matrix, nperm = 9999)
+mrm_no_nm   <- MRM(fst_matrix ~ divt_matrix + ne_matrix + nanc_matrix + bottleneck_matrix, nperm = 9999)
+mrm_no_bottleneck <- MRM(fst_matrix ~ divt_matrix + ne_matrix + nanc_matrix + nm_comb_matrix, nperm = 9999)
+
+# Compute AIC for each reduced model
+AIC_no_divt <- AIC(lm(fst_matrix ~ ne_matrix + nanc_matrix + nm_comb_matrix + bottleneck_matrix))
+AIC_no_ne   <- AIC(lm(fst_matrix ~ divt_matrix + nanc_matrix + nm_comb_matrix + bottleneck_matrix))
+AIC_no_nanc <- AIC(lm(fst_matrix ~ divt_matrix + ne_matrix + nm_comb_matrix + bottleneck_matrix))
+AIC_no_nm   <- AIC(lm(fst_matrix ~ divt_matrix + ne_matrix + nanc_matrix + bottleneck_matrix))
+AIC_no_bottleneck <- AIC(lm(fst_matrix ~ divt_matrix + ne_matrix + nanc_matrix + nm_comb_matrix))
+
+# Store the results in a dataframe
+AIC_results <- data.frame(
+  Model = c("Full Model", "No divt_matrix", "No ne_matrix", "No nanc_matrix", "No nm_comb_matrix", "No bottleneck3_matrix"),
+  AIC   = c(AIC_full, AIC_no_divt, AIC_no_ne, AIC_no_nanc, AIC_no_nm, AIC_no_bottleneck)
+)
+
+# Print the results sorted by AIC
+AIC_results <- AIC_results[order(AIC_results$AIC), ]
+print(AIC_results)
+
+# Then fit new models by first dropping nanc_matrix, and then dropping nm_comb_matrix, followed by AIC comparisons
+# Run the MRM model without nanc_matrix
+mrm_no_nanc <- MRM(fst_matrix ~ divt_matrix + ne_matrix + nm_comb_matrix + bottleneck_matrix, nperm = 9999)
+
+# Run the MRM model without nanc_matrix and nm_comb_matrix
+mrm_no_nanc_nmcomb <- MRM(fst_matrix ~ divt_matrix + ne_matrix + bottleneck_matrix, nperm = 9999)
+
+# Compare AIC values
+AIC_no_nanc <- AIC(lm(fst_matrix ~ divt_matrix + ne_matrix + nm_comb_matrix + bottleneck_matrix))
+AIC_no_nanc_nmcomb <- AIC(lm(fst_matrix ~ divt_matrix + ne_matrix + bottleneck_matrix))
+
+# Print AIC results for comparison
+cat("AIC after removing nanc_matrix:", AIC_no_nanc, "\n")
+cat("AIC after removing both nanc_matrix and nm_comb_matrix:", AIC_no_nanc_nmcomb, "\n")
+
+# Refit the MRM model using only the remaining variables (divt_matrix, ne_matrix, and bottleneck_matrix)?
+mrm_reduced3 <- MRM(fst_matrix ~ divt_matrix + ne_matrix + bottleneck_matrix, nperm = 9999)
+print(mrm_reduced3)
+
+# check for colinearity
+vif(lm(fst_matrix ~ divt_matrix + ne_matrix + bottleneck3_matrix))
+
+# Compute AIC for the full model
+AIC_full <- AIC(lm(fst_matrix ~ divt_matrix + ne_matrix + bottleneck3_matrix))
+print(AIC_full)
+
+
+
+
+
+
+

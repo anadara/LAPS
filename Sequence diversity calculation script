@@ -1,0 +1,361 @@
+###Loop for calculating nucleotide and haplotype diversities from multiple fasta files###
+###Population-specific calculations below###
+
+library("ape")
+library("pegas")
+
+#set working directory
+setwd("~/Library/CloudStorage/GoogleDrive-pmarko@hawaii.edu/My Drive/E. mathaei DNA sequences/Manuscript/sequence_data_analysis/seq_data_analysis")
+
+#make a list of the files
+files<-list.files("data/fasta_files")
+
+#create empty vectors to store the data
+nuc_div <- vector(mode = "numeric", length = length(files))
+hap_div <- vector(mode = "numeric", length = length(files))
+taj_d <- vector(mode = "numeric", length = length(files))
+
+#create folders
+dir.create("nucdiv")
+dir.create("hapdiv")
+dir.create("taj_d")
+
+#calculate nucleotide diversity for each locus
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #this just gets rid of the .fasta part of each name so it is cleaner looking
+  locusname <- gsub(".fasta", "", files[i])
+  #calculate nucleotide diversity
+  nuc_div[i] <- nuc.div(locus)
+}
+
+#save as a csv file
+write.csv(nuc_div, file = paste0("nucdiv/", "nucdiv.csv"))
+
+
+obj<-read.dna("filename",format="fasta")
+obj<-obj[grep("1101",rownames(obj)),]
+
+#calculate haplotype diversity for each locus
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #this just gets rid of the .fasta part of each name so it is cleaner looking
+  locusname <- gsub(".fasta", "", files[i])
+  #calculate haplotype diversity
+  hap_div[i] <- hap.div(locus)
+}
+
+#save as a csv file
+write.csv(hap_div, file = paste0("hapdiv/", "hapdiv.csv"))
+
+#calculate Tajima's D for each locus
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #this just gets rid of the .fasta part of each name so it is cleaner looking
+  locusname <- gsub(".fasta", "", files[i])
+  #calculate tajima's D
+  taj_d[i] <- tajima.test(locus)
+}
+
+#save as a csv file
+write.csv(taj_d, file = paste0("taj_d/", "taj_d.csv"))
+
+
+
+
+###############################################################################################
+###Loop for calculating POPULATION-specific nucleotide diversities from multiple fasta files###
+###############################################################################################
+
+library("ape")
+library("pegas")
+
+#set working directory
+setwd("~/Library/CloudStorage/GoogleDrive-pmarko@hawaii.edu/My Drive/E. mathaei DNA sequences/Manuscript/sequence_data_analysis/seq_data_analysis")
+
+#make a list of the files
+files<-list.files("data/fasta_files")
+
+#create empty vector to store the data
+nuc_div <- vector(mode = "numeric", length = length(files))
+
+#create folder
+dir.create("nucdiv")
+
+#calculate nucleotide diversity for each locus
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("GM",rownames(locus)),]
+  #calculate nucleotide diversity
+  nuc_div[i] <- nuc.div(loc_pop)
+}
+
+#save as a csv file
+write.csv(nuc_div, file = paste0("nucdiv/", "nucdiv_gm.csv"), row.names = FALSE)
+
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("JPN",rownames(locus)),]
+  #calculate nucleotide diversity
+  nuc_div[i] <- nuc.div(loc_pop)
+}
+
+#save as a csv file
+write.csv(nuc_div, file = paste0("nucdiv/", "nucdiv_jpn.csv"), row.names = FALSE)
+
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("KIR",rownames(locus)),]
+   #calculate nucleotide diversity
+  nuc_div[i] <- nuc.div(loc_pop)
+}
+
+#save as a csv file
+write.csv(nuc_div, file = paste0("nucdiv/", "nucdiv_kir.csv"), row.names = FALSE)
+
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("MAK",rownames(locus)),]
+    #calculate nucleotide diversity
+  nuc_div[i] <- nuc.div(loc_pop)
+}
+
+#save as a csv file
+write.csv(nuc_div, file = paste0("nucdiv/", "nucdiv_mak.csv"), row.names = FALSE)
+
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("MI",rownames(locus)),]
+    #calculate nucleotide diversity
+  nuc_div[i] <- nuc.div(loc_pop)
+}
+
+#save as a csv file
+write.csv(nuc_div, file = paste0("nucdiv/", "nucdiv_mi.csv"), row.names = FALSE)
+
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("NWHI",rownames(locus)),]
+   #calculate nucleotide diversity
+  nuc_div[i] <- nuc.div(loc_pop)
+}
+
+#save as a csv file
+write.csv(nuc_div, file = paste0("nucdiv/", "nucdiv_nwhi.csv"), row.names = FALSE)
+
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("RMI",rownames(locus)),]
+   #calculate nucleotide diversity
+  nuc_div[i] <- nuc.div(loc_pop)
+}
+
+#save as a csv file
+write.csv(nuc_div, file = paste0("nucdiv/", "nucdiv_rmi.csv"), row.names = FALSE)
+
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("KMC",rownames(locus)),]
+  #calculate nucleotide diversity
+  nuc_div[i] <- nuc.div(loc_pop)
+}
+
+#save as a csv file
+write.csv(nuc_div, file = paste0("nucdiv/", "nucdiv_kmc.csv"), row.names = FALSE)
+
+
+###############################################################################################
+###Loop for calculating POPULATION-specific haplotype diversities from multiple fasta files###
+###############################################################################################
+
+library("ape")
+library("pegas")
+
+#set working directory
+setwd("~/Library/CloudStorage/GoogleDrive-pmarko@hawaii.edu/My Drive/E. mathaei DNA sequences/Manuscript/sequence_data_analysis/seq_data_analysis")
+
+#make a list of the files
+files<-list.files("data/fasta_files")
+
+#create empty vector to store the data
+hap_div <- vector(mode = "numeric", length = length(files))
+
+#create folder
+dir.create("hapdiv")
+
+#calculate haplotide diversity for each locus
+
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("JPN",rownames(locus)),]
+   #calculate haplotide diversity
+  hap_div[i] <- hap.div(loc_pop)
+}
+
+#save as a csv file
+write.csv(hap_div, file = paste0("hapdiv/", "hapdiv_jpn.csv"), row.names = FALSE)
+
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("KIR",rownames(locus)),]
+   #calculate hapleotide diversity
+  hap_div[i] <- hap.div(loc_pop)
+}
+
+#save as a csv file
+write.csv(hap_div, file = paste0("hapdiv/", "hapdiv_kir.csv"), row.names = FALSE)
+
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("MAK",rownames(locus)),]
+   #calculate hapleotide diversity
+  hap_div[i] <- hap.div(loc_pop)
+}
+
+#save as a csv file
+write.csv(hap_div, file = paste0("hapdiv/", "hapdiv_mak.csv"), row.names = FALSE)
+
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("MI",rownames(locus)),]
+   #calculate hapleotide diversity
+  hap_div[i] <- hap.div(loc_pop)
+}
+
+#save as a csv file
+write.csv(hap_div, file = paste0("hapdiv/", "hapdiv_mi.csv"), row.names = FALSE)
+
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("NWHI",rownames(locus)),]
+  #calculate hapleotide diversity
+  hap_div[i] <- hap.div(loc_pop)
+}
+
+#save as a csv file
+write.csv(hap_div, file = paste0("hapdiv/", "hapdiv_nwhi.csv"), row.names = FALSE)
+
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("RMI",rownames(locus)),]
+   #calculate hapleotide diversity
+  hap_div[i] <- hap.div(loc_pop)
+}
+
+#save as a csv file
+write.csv(hap_div, file = paste0("hapdiv/", "hapdiv_rmi.csv"), row.names = FALSE)
+
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("KMC",rownames(locus)),]
+  #calculate hapleotide diversity
+  hap_div[i] <- hap.div(loc_pop)
+}
+
+#save as a csv file
+write.csv(hap_div, file = paste0("hapdiv/", "hapdiv_kmc.csv"), row.names = FALSE)
+
+
+
+
+
+###############################################################################################
+###Loop for calculating POPULATION-specific Tajimaʻs D from multiple fasta files###
+###############################################################################################
+
+library("ape")
+library("pegas")
+
+#set working directory
+setwd("~/Library/CloudStorage/GoogleDrive-pmarko@hawaii.edu/My Drive/E. mathaei DNA sequences/Manuscript/sequence_data_analysis/seq_data_analysis")
+
+#make a list of the files
+files<-list.files("data/fasta_files")
+
+#create empty vector to store the data
+taj_d <- vector(mode = "numeric", length = length(files))
+
+#create folder
+dir.create("taj_d")
+
+#calculate Tajima's D for each locus
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("GM",rownames(locus)),]
+  #calculate tajima's D
+  taj_d[i] <- tajima.test(locus)
+}
+
+taj_d[i] <- tajima.test(EmathRADCOI.fasta)
+
+
+#save as a csv file
+write.csv(taj_d, file = paste0("taj_d/", "taj_d_gm.csv"))
+
+#calculate Tajima's D for each locus
+i<-1
+for(i in 1:length(files)){
+  #load a single fasta file into a matrix format
+  locus<-read.dna(file= paste0("data/fasta_files/",files[i]), format = "fasta")
+  #select only one population
+  loc_pop<-locus[grep("JPN",rownames(locus)),]
+  #calculate tajima's D
+  taj_d[i] <- tajima.test(locus)
+}
+
+#save as a csv file
+write.csv(taj_d, file = paste0("taj_d/", "taj_d_jpn.csv"))

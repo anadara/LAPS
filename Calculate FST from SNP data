@@ -1,0 +1,52 @@
+############## PERFORM FST #############
+
+### Calculate FST from SNP data ###
+
+library(adegenet)
+library(hierfstat)
+library(pegas)
+library(graph4lg)
+library(multivariance)
+
+
+### Read vcf file
+vcf <- vcfR::read.vcfR("Data/de_novo_2740_no_outliers.vcf")
+
+### Download pop info
+pop <- read.table("Data/Emath_popfile.txt", header=TRUE, sep="\t", stringsAsFactors = TRUE)
+
+### Transform vcf to genind
+genind <- vcfR::vcfR2genind(vcf)
+
+### Define population map 
+genind@pop <- as.factor(pop$POP) #### Calculate fst on this vcf data
+
+### Estimate FST using hierfstat
+emath_fst_no_outliers = hierfstat::genet.dist(genind, method = "WC84")
+emath_fst_no_outliers_matrix <- as.matrix(emath_fst_no_outliers) #convert to matrix
+class(emath_fst_no_outliers_matrix) #check format
+
+#re-order fst matrix
+emath_fst_no_outliers_reorder <- reorder_mat(mat = emath_fst_no_outliers_matrix, order = c("Oahu_E", "Oahu_S", "Hawaii_Isl", "Lehua", "Kiritimati", "Majuro", "Guam", "Okinawa"))
+
+#export file
+write.table(emath_fst_no_outliers_reorder, file = "emath_fst_no_outliers_reorder.txt", 
+            append = FALSE, quote = FALSE, sep = "\t",
+            eol = "\n", na = "NA", dec = ".", row.names = TRUE,
+            col.names = NA, qmethod = c("escape", "double"), #NA puts a tab in the top-left corner
+            fileEncoding = "")
+
+#bootstrap for 95% CI
+emath_fst_no_outliers_conf_int <- boot.ppfst(genind, nboot=100, quant=c(0.025, 0.975))
+
+#genetic diversity with adegenet
+div <- summary(genind)
+names(div)
+
+#genetic diversity with hierfstat
+basicstat <- basic.stats(genind, diploid = TRUE, digits = 4)
+names(basicstat)
+head(basicstat)
+
+
+
